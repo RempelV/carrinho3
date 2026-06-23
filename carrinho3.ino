@@ -27,7 +27,7 @@ void stopAll() {
   digitalWrite(motor_left_bck, LOW);
   digitalWrite(motor_right_fwd, LOW);
   digitalWrite(motor_right_bck, LOW);
-  delay(100)
+  delay(100);
 }
 
 void loop() {
