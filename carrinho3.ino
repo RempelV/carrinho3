@@ -1,51 +1,127 @@
-#define velmotor_left 3
-#define motor_left_fwd 4
-#define motor_left_bck 5
-#define velmotor_right 10
-#define motor_right_fwd 9
-#define motor_right_bck 8
-#define tmp 3000
-int vel=0;
+#include <SoftwareSerial.h>
 
-void setup() {
-  pinMode(velmotor_left,OUTPUT);
-  pinMode(motor_left_fwd,OUTPUT);
-  pinMode(motor_left_bck,OUTPUT);
-  pinMode(velmotor_right,OUTPUT);
-  pinMode(motor_right_fwd,OUTPUT);
-  pinMode(motor_right_bck,OUTPUT);
-  digitalWrite(motor_left_fwd,LOW);
-  digitalWrite(motor_left_bck,LOW);
-  digitalWrite(motor_right_fwd,LOW);
-  digitalWrite(motor_right_bck,LOW);
-  analogWrite(velmotor_left,vel);
-  analogWrite(velmotor_right,vel);
+SoftwareSerial BT(6, 7); // Arduino RX, TX
+
+#define ENA 3
+#define IN1 4
+#define IN2 5
+
+#define ENB 10
+#define IN3 9
+#define IN4 8
+
+int velocidade = 255;
+
+void parar() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+
+  Serial.println("STOP");
 }
 
-void stopAll() {
-  digitalWrite(motor_left_fwd, LOW);
-  digitalWrite(motor_left_bck, LOW);
-  digitalWrite(motor_right_fwd, LOW);
-  digitalWrite(motor_right_bck, LOW);
-  delay(100);
+void frente() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  Serial.println("FORWARD");
+}
+
+void re() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  Serial.println("BACKWARD");
+}
+
+void esquerda() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  Serial.println("LEFT");
+}
+
+void direita() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  Serial.println("RIGHT");
+}
+
+void setup() {
+
+  Serial.begin(9600);
+  BT.begin(9600);
+
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  pinMode(ENB, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  analogWrite(ENA, velocidade);
+  analogWrite(ENB, velocidade);
+
+  parar();
+
+  Serial.println("Bluetooth RC iniciado.");
 }
 
 void loop() {
-  vel=255;
-  analogWrite(velmotor_left, vel);
-  analogWrite(velmotor_right, vel);
 
-  stopAll();
-  digitalWrite(motor_left_fwd, HIGH);
-  delay(tmp);
+  if (BT.available()) {
 
-  stopAll();
-  digitalWrite(motor_right_fwd, HIGH);
-  delay(tmp);
+    char c = BT.read();
 
-  stopAll();
-  digitalWrite(motor_left_bck, HIGH);
-  digitalWrite(motor_right_bck, HIGH);
-  delay(tmp);
+    Serial.print("ASCII ");
+    Serial.print((int)c);
+    Serial.print(" -> ");
+    Serial.println(c);
 
+    // Ignora aspas e quebras de linha
+    if (c == '"' || c == '\r' || c == '\n')
+      return;
+
+    switch (c) {
+
+      case 'F':
+        frente();
+        break;
+
+      case 'B':
+        re();
+        break;
+
+      case 'L':
+        esquerda();
+        break;
+
+      case 'R':
+        direita();
+        break;
+
+      case 'S':
+        parar();
+        break;
+
+      default:
+        Serial.println("Comando desconhecido.");
+        break;
+    }
+  }
 }
